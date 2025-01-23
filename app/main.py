@@ -1,7 +1,9 @@
 import os
-import yt_dlp
 import tkinter as tk
 from tkinter import messagebox
+
+import yt_dlp
+
 
 class YouTubeDownloader:
     def __init__(self, download_path='./downloads'):
@@ -13,6 +15,12 @@ class YouTubeDownloader:
         """Garante que o diretório de download existe."""
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path)
+
+    def _hook(self, d):
+        """Método para atualizar a barra de progresso."""
+        if d['status'] == 'downloading':
+            if d.get('total_bytes') is not None:
+                self.progress.set(d['downloaded_bytes'] / d['total_bytes'])
 
     def download_video(self, url, resolution):
         """Realiza o download de um vídeo do YouTube a partir de uma URL."""
@@ -49,6 +57,7 @@ class YouTubeDownloader:
             messagebox.showerror("Erro", f"Erro ao tentar baixar o vídeo: {e}")
         except Exception as e:
             messagebox.showerror("Erro", f"Ocorreu um erro inesperado: {e}")
+
 
 class App(tk.Tk):
     def __init__(self):
@@ -95,6 +104,7 @@ class App(tk.Tk):
 
         downloader = YouTubeDownloader(download_path='./downloads')
         downloader.download_video(video_url, resolution_choice)
+
 
 if __name__ == "__main__":
     app = App()
