@@ -1,5 +1,7 @@
 import os
 import yt_dlp
+import tkinter as tk
+from tkinter import messagebox
 
 class YouTubeDownloader:
     def __init__(self, download_path='./downloads'):
@@ -12,19 +14,10 @@ class YouTubeDownloader:
         if not os.path.exists(self.download_path):
             os.makedirs(self.download_path)
 
-    def download_video(self, url):
+    def download_video(self, url, resolution):
         """Realiza o download de um vídeo do YouTube a partir de uma URL."""
         try:
-            # Solicita ao usuário a resolução desejada
-            print("Escolha a resolução para download:")
-            print("1. 720p (Alta qualidade)")
-            print("2. 480p (Qualidade média)")
-            print("3. 360p (Qualidade baixa)")
-            print("4. 1080p (Full HD)")
-            print("5. O máximo disponível")
-            resolution_choice = input("Digite o número da resolução: ")
-
-            # Define a resolução com base na escolha do usuário
+            # Map de resoluções
             resolution_map = {
                 '1': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/mp4',
                 '2': 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/mp4',
@@ -32,7 +25,7 @@ class YouTubeDownloader:
                 '4': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/mp4',
                 '5': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',  # Máximo disponível
             }
-            video_format = resolution_map.get(resolution_choice, resolution_map['1'])  # Default para 720p
+            video_format = resolution_map.get(resolution, resolution_map['1'])  # Default para 720p
 
             # Configurações do yt-dlp com conversão forçada para MP4
             ydl_opts = {
@@ -51,15 +44,58 @@ class YouTubeDownloader:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 print(f"Baixando vídeo de: {url}")
                 ydl.download([url])
-                print("Download concluído! Arquivo salvo como MP4.")
+                messagebox.showinfo("Download Concluído", "Download concluído! Arquivo salvo como MP4.")
         except yt_dlp.utils.DownloadError as e:
-            print(f"Erro ao tentar baixar o vídeo: {e}")
+            messagebox.showerror("Erro", f"Erro ao tentar baixar o vídeo: {e}")
         except Exception as e:
-            print(f"Ocorreu um erro inesperado: {e}")
+            messagebox.showerror("Erro", f"Ocorreu um erro inesperado: {e}")
+
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("YouTube Video Downloader")
+        self.geometry("400x300")
+
+        self.label_url = tk.Label(self, text="Digite a URL do vídeo:")
+        self.label_url.pack(pady=10)
+
+        self.entry_url = tk.Entry(self, width=50)
+        self.entry_url.pack(pady=10)
+
+        self.label_resolution = tk.Label(self, text="Escolha a resolução para download:")
+        self.label_resolution.pack(pady=10)
+
+        self.resolution_var = tk.StringVar(value='1')
+
+        self.radio_button_720p = tk.Radiobutton(self, text="720p", variable=self.resolution_var, value='1')
+        self.radio_button_720p.pack(anchor='w')
+
+        self.radio_button_480p = tk.Radiobutton(self, text="480p", variable=self.resolution_var, value='2')
+        self.radio_button_480p.pack(anchor='w')
+
+        self.radio_button_360p = tk.Radiobutton(self, text="360p", variable=self.resolution_var, value='3')
+        self.radio_button_360p.pack(anchor='w')
+
+        self.radio_button_1080p = tk.Radiobutton(self, text="1080p", variable=self.resolution_var, value='4')
+        self.radio_button_1080p.pack(anchor='w')
+
+        self.radio_button_max = tk.Radiobutton(self, text="Máximo disponível", variable=self.resolution_var, value='5')
+        self.radio_button_max.pack(anchor='w')
+
+        self.download_button = tk.Button(self, text="Baixar", command=self.start_download)
+        self.download_button.pack(pady=20)
+
+    def start_download(self):
+        video_url = self.entry_url.get()
+        resolution_choice = self.resolution_var.get()
+
+        if not video_url:
+            messagebox.showwarning("Advertência", "Por favor, insira a URL do vídeo.")
+            return
+
+        downloader = YouTubeDownloader(download_path='./downloads')
+        downloader.download_video(video_url, resolution_choice)
 
 if __name__ == "__main__":
-    print("=== YouTube Video Downloader com yt-dlp ===")
-    video_url = input("Digite a URL do vídeo do YouTube: ")
-
-    downloader = YouTubeDownloader(download_path='./downloads')
-    downloader.download_video(video_url)
+    app = App()
+    app.mainloop()
