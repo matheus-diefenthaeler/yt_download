@@ -1,7 +1,7 @@
 import os
 import yt_dlp
 
-class YouTubeDownloader2:
+class YouTubeDownloader:
     def __init__(self, download_path='./downloads'):
         """Inicializa o downloader com o caminho onde os vídeos serão salvos."""
         self.download_path = download_path
@@ -15,50 +15,43 @@ class YouTubeDownloader2:
     def download_video(self, url):
         """Realiza o download de um vídeo do YouTube a partir de uma URL."""
         try:
-            # Solicita ao usuário o formato do vídeo desejado
-            print("Escolha o formato para download:")
-            print("1. MP4")
-            print("2. WEBM")
-            format_choice = input("Digite o número do formato: ")
-
             # Solicita ao usuário a resolução desejada
             print("Escolha a resolução para download:")
             print("1. 720p (Alta qualidade)")
             print("2. 480p (Qualidade média)")
             print("3. 360p (Qualidade baixa)")
+            print("4. 1080p (Full HD)")
+            print("5. O máximo disponível")
             resolution_choice = input("Digite o número da resolução: ")
-
-            # Define o formato com base na escolha do usuário
-            if format_choice == '1':
-                extension = '.mp4'
-                base_format = 'mp4'
-            elif format_choice == '2':
-                extension = '.webm'
-                base_format = 'webm'
-            else:
-                print("Escolha inválida! O formato padrão será MP4.")
-                extension = '.mp4'
-                base_format = 'mp4'
 
             # Define a resolução com base na escolha do usuário
             resolution_map = {
-                '1': 'bestvideo[height<=720][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
-                '2': 'bestvideo[height<=480][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
-                '3': 'bestvideo[height<=360][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
+                '1': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/mp4',
+                '2': 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/mp4',
+                '3': 'bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/mp4',
+                '4': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/mp4',
+                '5': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',  # Máximo disponível
             }
             video_format = resolution_map.get(resolution_choice, resolution_map['1'])  # Default para 720p
 
-            # Configurações do yt-dlp
+            # Configurações do yt-dlp com conversão forçada para MP4
             ydl_opts = {
-                'format': video_format,  # Define o formato com base em resolução e tipo
-                'outtmpl': os.path.join(self.download_path, f'%(title)s{extension}'),  # Nome do arquivo com extensão escolhida
+                'format': video_format,  # Sempre tenta MP4
+                'outtmpl': os.path.join(self.download_path, '%(title)s.%(ext)s'),  # Nome do arquivo
                 'noplaylist': True,  # Não baixar playlists, apenas o vídeo
+                'merge_output_format': 'mp4',  # Conversão para MP4
+                'postprocessors': [
+                    {
+                        'key': 'FFmpegVideoConvertor',
+                        'preferedformat': 'mp4'
+                    }
+                ],
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 print(f"Baixando vídeo de: {url}")
                 ydl.download([url])
-                print(f"Download concluído! Arquivo salvo em formato {extension}.")
+                print("Download concluído! Arquivo salvo como MP4.")
         except yt_dlp.utils.DownloadError as e:
             print(f"Erro ao tentar baixar o vídeo: {e}")
         except Exception as e:
@@ -68,5 +61,5 @@ if __name__ == "__main__":
     print("=== YouTube Video Downloader com yt-dlp ===")
     video_url = input("Digite a URL do vídeo do YouTube: ")
 
-    downloader = YouTubeDownloader2(download_path='./downloads')
+    downloader = YouTubeDownloader(download_path='./downloads')
     downloader.download_video(video_url)
