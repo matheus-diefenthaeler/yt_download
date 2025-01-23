@@ -19,23 +19,38 @@ class YouTubeDownloader2:
             print("Escolha o formato para download:")
             print("1. MP4")
             print("2. WEBM")
-            choice = input("Digite o número do formato: ")
+            format_choice = input("Digite o número do formato: ")
+
+            # Solicita ao usuário a resolução desejada
+            print("Escolha a resolução para download:")
+            print("1. 720p (Alta qualidade)")
+            print("2. 480p (Qualidade média)")
+            print("3. 360p (Qualidade baixa)")
+            resolution_choice = input("Digite o número da resolução: ")
 
             # Define o formato com base na escolha do usuário
-            if choice == '1':
-                video_format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4'
+            if format_choice == '1':
                 extension = '.mp4'
-            elif choice == '2':
-                video_format = 'bestvideo[ext=webm]+bestaudio[ext=webm]/webm'
+                base_format = 'mp4'
+            elif format_choice == '2':
                 extension = '.webm'
+                base_format = 'webm'
             else:
                 print("Escolha inválida! O formato padrão será MP4.")
-                video_format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4'
                 extension = '.mp4'
+                base_format = 'mp4'
+
+            # Define a resolução com base na escolha do usuário
+            resolution_map = {
+                '1': 'bestvideo[height<=720][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
+                '2': 'bestvideo[height<=480][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
+                '3': 'bestvideo[height<=360][ext=' + base_format + ']+bestaudio[ext=m4a]/' + base_format,
+            }
+            video_format = resolution_map.get(resolution_choice, resolution_map['1'])  # Default para 720p
 
             # Configurações do yt-dlp
             ydl_opts = {
-                'format': video_format,  # Define o formato dinâmico
+                'format': video_format,  # Define o formato com base em resolução e tipo
                 'outtmpl': os.path.join(self.download_path, f'%(title)s{extension}'),  # Nome do arquivo com extensão escolhida
                 'noplaylist': True,  # Não baixar playlists, apenas o vídeo
             }
