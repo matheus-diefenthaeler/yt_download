@@ -17,42 +17,34 @@ class YouTubeDownloader:
             os.makedirs(self.download_path)
 
     def _hook(self, d):
-        """Método para atualizar a barra de progresso."""
+        """Método para atualizar a barra de progresso (não utilizado diretamente com tkinter no momento)."""
         if d['status'] == 'downloading':
             if d.get('total_bytes') is not None:
                 self.progress.set(d['downloaded_bytes'] / d['total_bytes'])
 
     def download_video(self, url, resolution):
-        """Realiza o download de um vídeo do YouTube a partir de uma URL."""
         try:
-            # Map de resoluções
+            # Aqui o map continua, mas o formato usado é mais genérico e funcional
             resolution_map = {
-                '1': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/mp4',
-                '2': 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/mp4',
-                '3': 'bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/mp4',
-                '4': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/mp4',
-                '5': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',  # Máximo disponível
+                '1': 'bestvideo[height<=720]+bestaudio/best',
+                '2': 'bestvideo[height<=480]+bestaudio/best',
+                '3': 'bestvideo[height<=360]+bestaudio/best',
+                '4': 'bestvideo[height<=1080]+bestaudio/best',
+                '5': 'bestvideo+bestaudio/best'  # Máximo disponível
             }
-            video_format = resolution_map.get(resolution, resolution_map['1'])  # Default para 720p
+            video_format = resolution_map.get(resolution, resolution_map['1'])
 
-            # Configurações do yt-dlp com conversão forçada para MP4
             ydl_opts = {
-                'format': video_format,  # Sempre tenta MP4
-                'outtmpl': os.path.join(self.download_path, '%(title)s.%(ext)s'),  # Nome do arquivo
-                'noplaylist': True,  # Não baixar playlists, apenas o vídeo
-                'merge_output_format': 'mp4',  # Conversão para MP4
-                'postprocessors': [
-                    {
-                        'key': 'FFmpegVideoConvertor',
-                        'preferedformat': 'mp4'
-                    }
-                ],
+                'format': video_format,
+                'outtmpl': os.path.join(self.download_path, '%(title)s.%(ext)s'),
+                'noplaylist': True,
+                'merge_output_format': 'mkv',  # MKV lida melhor com diferentes codecs
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 print(f"Baixando vídeo de: {url}")
                 ydl.download([url])
-                messagebox.showinfo("Download Concluído", "Download concluído! Arquivo salvo como MP4.")
+                messagebox.showinfo("Download Concluído", "Download concluído! Arquivo salvo como MKV.")
         except yt_dlp.utils.DownloadError as e:
             messagebox.showerror("Erro", f"Erro ao tentar baixar o vídeo: {e}")
         except Exception as e:
